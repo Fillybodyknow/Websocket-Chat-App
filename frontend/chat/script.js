@@ -1,5 +1,5 @@
 
-let BaseURL = "https://21d1-101-51-200-141.ngrok-free.app";
+let BaseURL = "https://03e1-101-51-200-141.ngrok-free.app";
 let socket; 
 
 /**
@@ -78,14 +78,41 @@ function createRoom() {
 }
 
 function connectWebSocket() {
-    const roomId = document.getElementById("roomId").value;
-    const sender = document.getElementById("sender").value;
+  const roomId = document.getElementById("roomId").value;
+  const sender = document.getElementById("sender").value;
 
-    if (!roomId || !sender) {
-        showMessageBox("กรุณากรอก Room ID และชื่อผู้ส่งก่อนเชื่อมต่อ", "error");
-        return;
+  if (!roomId || !sender) {
+    showMessageBox("กรุณากรอก Room ID และชื่อผู้ส่งก่อนเชื่อมต่อ", "error");
+    return;
+  }
+
+  console.log("Fetch URL:", `${BaseURL}/api/chat_rooms/history?room_id=${roomId}`);
+
+  fetch(`${BaseURL}/api/chat_rooms/history?room_id=${roomId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json","ngrok-skip-browser-warning": "true"}
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Chat history data:", data);
+    if (data.chat_messages) {
+      data.chat_messages.forEach(msg => {
+        appendChat(msg.message, "other", msg.sender);
+      });
     }
+  })
+  .catch(error => {
+    console.error("Error fetching chat history:", error);
+    showMessageBox("❌ เกิดข้อผิดพลาดในการดึงประวัติแชท", "error");
+  })
+  .finally(() => {
+    openWebSocket(roomId, sender);
+  });
+}
 
+
+
+function openWebSocket(roomId, sender) {
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
         appendChat("🟡 ตัดการเชื่อมต่อเก่าแล้ว", "system");
@@ -99,9 +126,9 @@ function connectWebSocket() {
     };
 
     socket.onmessage = (event) => {
-    const [sender, message] = event.data.split("|"); // แยกชื่อกับข้อความ
-    appendChat(message, "other", sender);
-};
+        const [sender, message] = event.data.split("|");
+        appendChat(message, "other", sender);
+    };
 
     socket.onerror = (err) => {
         console.error("WebSocket error:", err);
@@ -115,6 +142,7 @@ function connectWebSocket() {
         }
     };
 }
+
 
 function sendMessage() {
     const messageInput = document.getElementById("message");

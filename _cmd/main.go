@@ -36,13 +36,14 @@ func main() {
 	Router := gin.Default()
 	Router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			"https://21d1-101-51-200-141.ngrok-free.app",
-			"https://0066-101-51-200-141.ngrok-free.app",
+			"https://03e1-101-51-200-141.ngrok-free.app",
+			"https://f0a9-101-51-200-141.ngrok-free.app",
 		},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "ngrok-skip-browser-warning"},
 		AllowCredentials: true,
 	}))
+
 	API := Router.Group("/api")
 	Chat := API.Group("/chat_rooms")
 	ChatRouter.ChatRoutes(Chat)
