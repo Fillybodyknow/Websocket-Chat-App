@@ -27,7 +27,8 @@ func main() {
 	ChatHandler := handler.NewChatHandler(ChatService)
 	ChatRouter := router.NewChatRouter(ChatHandler)
 	Router := gin.Default()
-	Chat := Router.Group("/chat")
+	API := Router.Group("/api")
+	Chat := API.Group("/chat_rooms")
 	ChatRouter.ChatRoutes(Chat)
 
 	port := os.Getenv("PORT")
