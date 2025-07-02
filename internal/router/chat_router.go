@@ -16,4 +16,5 @@ func NewChatRouter(chatHandler *handler.ChatHandler) *ChatRouter {
 func (r *ChatRouter) ChatRoutes(router *gin.RouterGroup) {
 	router.GET("/ws", r.ChatHandler.WebsocketHandler)
 	router.POST("/create_room", r.ChatHandler.CreateRoomHandler)
+	router.GET("/history", r.ChatHandler.GetHistoryChatHandler)
 }
