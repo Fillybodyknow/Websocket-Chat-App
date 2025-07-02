@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🟢 WebSocket Chat Room</title>
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif; /* Using Inter font */
+            padding: 20px;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        div {
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input {
+            padding: 10px 15px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px; /* Rounded corners */
+            flex-grow: 1;
+            min-width: 150px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px; /* Rounded corners */
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        #roomIdDisplay {
+            margin-left: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        #chat {
+            border: 1px solid #ccc;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        .msg {
+            margin-bottom: 8px;
+            padding: 5px 0;
+            line-height: 1.4;
+        }
+
+        .sender {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Custom Message Box Styles */
+        #messageBox {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-weight: bold;
+            text-align: center;
+            min-width: 250px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            input, button {
+                width: 100%;
+                margin: 5px 0;
+            }
+            div {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #roomIdDisplay {
+                margin-left: 0;
+                margin-top: 5px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>💬 WebSocket Chat Room</h1>
+
+    <div>
+        <input id="roomName" placeholder="ชื่อห้องใหม่..." />
+        <button onclick="createRoom()">➕ สร้างห้อง</button>
+        <span id="roomIdDisplay"></span>
+    </div>
+
+    <div>
+        <input id="roomId" placeholder="Room ID" />
+        <input id="sender" placeholder="ชื่อของคุณ" />
+        <button onclick="connectWebSocket()">🔌 เชื่อมต่อห้องแชท</button>
+    </div>
+
+    <div id="chat"></div>
+
+    <div>
+        <input id="message" placeholder="พิมพ์ข้อความ..." />
+        <button onclick="sendMessage()">📤 ส่ง</button>
+    </div>
+
+    <!-- Custom Message Box -->
+    <div id="messageBox">
+        <span id="messageText"></span>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/fillybodyknow/websocket-chat-app/internal/hub"
 	"github.com/fillybodyknow/websocket-chat-app/internal/service"
 	"github.com/fillybodyknow/websocket-chat-app/models"
 	"github.com/gin-gonic/gin"
@@ -19,44 +20,77 @@ var upgrader = websocket.Upgrader{
 
 type ChatHandler struct {
 	ChatService *service.ChatService
+	Hub         *hub.Hub
 }
 
-func NewChatHandler(chatService *service.ChatService) *ChatHandler {
-	return &ChatHandler{ChatService: chatService}
+func NewChatHandler(chatService *service.ChatService, hubInstance *hub.Hub) *ChatHandler {
+	return &ChatHandler{
+		ChatService: chatService,
+		Hub:         hubInstance,
+	}
+}
+
+func handleRead(client *hub.Client, sender string, service *service.ChatService, hubInstance *hub.Hub) {
+	defer func() {
+		hubInstance.Unregister <- client
+		client.Conn.Close()
+	}()
+
+	for {
+		_, msg, err := client.Conn.ReadMessage()
+		if err != nil {
+			log.Println("❌ Read error:", err)
+			break
+		}
+
+		service.SaveMessage(&models.ChatMessage{
+			Sender:    sender,
+			Message:   string(msg),
+			CreatedAt: time.Now(),
+		}, client.RoomID)
+
+		broadcastMsg := []byte(sender + "|" + string(msg))
+
+		hubInstance.Broadcast <- hub.Message{
+			RoomID:    client.RoomID,
+			Data:      broadcastMsg,
+			SenderRef: client,
+		}
+
+	}
+}
+
+func handleWrite(client *hub.Client) {
+	for msg := range client.Send {
+		err := client.Conn.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			log.Println("❌ Write error:", err)
+			break
+		}
+	}
 }
 
 func (h *ChatHandler) WebsocketHandler(c *gin.Context) {
+	roomID := c.Query("room_id")
+	sender := c.Query("sender")
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("❌ Failed to upgrade connection:", err)
 		return
 	}
-	defer conn.Close()
 
-	roomID := c.Query("room_id")
-	sender := c.Query("sender")
-
-	for {
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("❌ Failed to read message:", err)
-			break
-		}
-
-		log.Printf("📩 Received: %s\n", message)
-
-		chat := &models.ChatMessage{Sender: sender, Message: string(message), CreatedAt: time.Now()}
-
-		if err := h.ChatService.SaveMessage(chat, roomID); err != nil {
-			log.Println("❌ Failed to save message:", err)
-			break
-		}
-
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("✅ Message received")); err != nil {
-			log.Println("❌ Failed to write message:", err)
-			break
-		}
+	client := &hub.Client{
+		Conn:   conn,
+		Send:   make(chan []byte),
+		RoomID: roomID,
 	}
+
+	h.Hub.Register <- client
+
+	// Read & write goroutines
+	go handleRead(client, sender, h.ChatService, h.Hub)
+	go handleWrite(client)
 }
 
 func (h *ChatHandler) CreateRoomHandler(c *gin.Context) {
@@ -76,4 +110,15 @@ func (h *ChatHandler) CreateRoomHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "สร้างห้องแชทสำเร็จ", "room_id": roomID.Hex()})
+}
+
+func (h *ChatHandler) GetHistoryChatHandler(c *gin.Context) {
+	roomID := c.Query("room_id")
+	chatMessages, err := h.ChatService.GetHistoryChat(roomID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "เกิดข้อผิดพลาดในการดึงข้อมูล"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"chat_messages": chatMessages})
 }
