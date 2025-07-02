@@ -23,6 +23,8 @@ func main() {
 	db := config.ConnectMongoDB()
 	DBname := os.Getenv("DB_NAME")
 	port := os.Getenv("PORT")
+	NGROK8080 := os.Getenv("NGROK_8080")
+	NGROK5500 := os.Getenv("NGROK_5500")
 
 	hubInstance := hub.NewHub()
 	go hubInstance.Run()
@@ -36,8 +38,8 @@ func main() {
 	Router := gin.Default()
 	Router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			"https://03e1-101-51-200-141.ngrok-free.app",
-			"https://f0a9-101-51-200-141.ngrok-free.app",
+			NGROK8080,
+			NGROK5500,
 		},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "ngrok-skip-browser-warning"},
