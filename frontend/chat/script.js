@@ -1,6 +1,6 @@
 
-let BaseURL = "https://b21a-101-51-200-141.ngrok-free.app";
-let socket; 
+let BaseURL = "https://renewed-similarly-collie.ngrok-free.app";
+let socket;
 
 /**
  * @param {string} message
